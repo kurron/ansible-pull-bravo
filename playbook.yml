@@ -22,7 +22,7 @@
        fallocate_guard: "/var/{{ guard_prefix }}-fallocate"
        mkswap_guard: "/var/{{ guard_prefix }}-mkswap"
        swapon_guard: "/var/{{ guard_prefix }}-swapon"
-       swapiness_guard: "/var/{{ guard_prefix }}-swappiness"
+       swappiness_guard: "/var/{{ guard_prefix }}-swappiness"
        inode_guard: "/var/{{ guard_prefix }}-inode"
   tasks:
       - command: /usr/bin/fallocate --length {{ swap_size }} {{ swap_path }} creates={{ fallocate_guard }}
