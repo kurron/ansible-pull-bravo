@@ -85,8 +85,8 @@
       - shell: /root/install-docker creates=/usr/bin/docker
       - lineinfile: dest=/etc/default/grub regexp='^GRUB_CMDLINE_LINUX=""' line='GRUB_CMDLINE_LINUX="cgroup_enable=memory swapaccount=1"'
       - command: /usr/sbin/update-grub
-      - lineinfile: dest=/etc/default/docker line='DOCKER_OPTS="-H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --storage-driver=overlay --graph={{ mount_point }} --insecure-registry 192.168.254.50"'
-      - user: name={{ user_account }} groups=docker
+      - lineinfile: dest=/etc/default/docker line='DOCKER_OPTS="-H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --storage-driver=overlay --graph={{ mount_point }} --insecure-registry registry.transparent.com"'
+      - user: name={{ user_account }} groups=docker append=yes
       - command: service docker restart creates={{ service_guard }}
       - file: path={{ service_guard }} state=touch
       - command: docker run hello-world
