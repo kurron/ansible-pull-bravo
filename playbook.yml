@@ -111,6 +111,7 @@
        registry_host: "HOOOOOOOOOOOOST"
        registry_password: "PAAAAAAAAAAAAASWORD"
   tasks:
+      - debug: msg="host={{ registry_host }}, password= {{ registry_password }}"
       - template: src=templates/registry.json dest=/home/{{ user_account }}/.dockercfg mode=0544 backup=no force=yes
 
 
