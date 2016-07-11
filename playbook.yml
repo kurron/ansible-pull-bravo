@@ -7,6 +7,39 @@
     - name: create groups based on distribution
       group_by: key={{ ansible_distribution }}
 
+# https://www.digitalocean.com/community/tutorials/how-to-add-swap-on-ubuntu-14-04
+- name: Add Swap File
+  hosts: Ubuntu
+  gather_facts: True
+  sudo: True
+  vars:
+       guard_name: "swapfile"
+       swap_size: "4G"
+       swap_path: "/swapfile"
+       swappiness: "vm.swappiness=10"
+       inode: "vm.vfs_cache_pressure=50"
+       guard_prefix: "ansible-swapfile"
+       fallocate_guard: "/var/{{ guard_prefix }}-fallocate"
+       mkswap_guard: "/var/{{ guard_prefix }}-mkswap"
+       swapon_guard: "/var/{{ guard_prefix }}-swapon"
+       swapiness_guard: "/var/{{ guard_prefix }}-swappiness"
+       inode_guard: "/var/{{ guard_prefix }}-inode"
+  tasks:
+      - command: /usr/bin/fallocate --length {{ swap_size }} {{ swap_path }} creates={{ fallocate_guard }}
+      - file: path={{ fallocate_guard }} state=touch
+      - file: path={{ swap_path }} owner=root group=root mode=0600
+      - command: /sbin/mkswap {{ swap_path }} creates={{ mkswap_guard }}
+      - file: path={{ mkswap_guard }} state=touch
+      - command: /sbin/swapon {{ swap_path }} creates={{ swapon_guard }}
+      - file: path={{ swapon_guard }} state=touch
+      - lineinfile: dest=/etc/fstab line="{{ swap_path }}   none    swap    sw    0   0"
+      - command: /sbin/sysctl {{ swappiness }} creates={{ swappiness_guard }}
+      - file: path={{ swappiness_guard }} state=touch
+      - lineinfile: dest=/etc/sysctl.conf line="{{ swappiness }}"
+      - command: /sbin/sysctl {{ inode }} creates={{ inode_guard }}
+      - file: path={{ inode_guard }} state=touch
+      - lineinfile: dest=/etc/sysctl.conf line="{{ inode }}"
+
 - name: Configure the Docker Partition
   hosts: Ubuntu
   become: True
