@@ -12,7 +12,7 @@
 # hosts: Ubuntu
   hosts: nobody
   gather_facts: True
-  sudo: True
+  become: True
   vars:
        guard_name: "swapfile"
        swap_size: "4G"
@@ -108,13 +108,8 @@
   become: True
   vars:
        user_account: vagrant
-       compose_version: "1.7.1"
-#      This must match the mount point that is used by the LVM creation task
-       mount_point: /var/lib/docker
-       guard_prefix: "ansible-docker"
-       service_guard: "/var/{{ guard_prefix }}-service"
-       registry_host: "should be set as an extra vars argument"
-       registry_password: "should be set as an extra vars argument"
+       registry_host: "HOOOOOOOOOOOOST"
+       registry_password: "PAAAAAAAAAAAAASWORD"
   tasks:
       - template: src=templates/registry.json dest=/home/{{ user_account }}/.dockercfg mode=0544 backup=no force=yes
 
