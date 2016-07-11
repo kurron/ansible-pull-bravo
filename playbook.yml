@@ -1,0 +1,126 @@
+#!/usr/bin/env ansible-playbook
+
+- name: Gather prerequisites
+  hosts: all
+  gather_facts: True
+  tasks:
+    - name: create groups based on distribution
+      group_by: key={{ ansible_distribution }}
+
+- name: Configure the MySQL Partition
+  hosts: Ubuntu
+  become: True
+  vars:
+       device_name: "/dev/sdb"
+       group_name: "mysql"
+       volume_name: "storage"
+       volume_size: "7G"
+       mount_point: "/var/lib/mysql"
+       guard_prefix: "ansible-mysql"
+       pvcreate_guard: "/var/{{ guard_prefix }}-pvcreate"
+       vgcreate_guard: "/var/{{ guard_prefix }}-vgcreate"
+       lvcreate_guard: "/var/{{ guard_prefix }}-lvcreate"
+       mkfs_guard: "/var/{{ guard_prefix }}-mkfs"
+  tasks:
+      - apt: name=lvm2 state=present update_cache=true cache_valid_time=3600 install_recommends=true
+      - command: /sbin/pvcreate {{ device_name }} creates={{ pvcreate_guard }}
+      - file: path={{ pvcreate_guard }} state=touch
+      - command: /sbin/vgcreate {{ group_name }} {{ device_name }} creates={{ vgcreate_guard }}
+      - file: path={{ vgcreate_guard }} state=touch
+      - command: /sbin/lvcreate --name {{ volume_name }} --size {{ volume_size }} {{ group_name }} creates={{ lvcreate_guard }}
+      - file: path={{ lvcreate_guard }} state=touch
+      - command: /sbin/mkfs.ext4 /dev/{{ group_name }}/{{ volume_name }} creates={{ mkfs_guard }}
+      - file: path={{ mkfs_guard }} state=touch
+      - mount: name={{ mount_point }} src=/dev/{{ group_name }}/{{ volume_name }} fstype=ext4 opts=noatime state=mounted
+
+- name: Configure the RabbitMQ Partition
+  hosts: Ubuntu
+  become: True
+  vars:
+       device_name: "/dev/sdc"
+       group_name: "rabbitmq"
+       volume_name: "storage"
+       volume_size: "7G"
+       mount_point: "/var/lib/rabbitmq"
+       guard_prefix: "ansible-rabbitmq"
+       pvcreate_guard: "/var/{{ guard_prefix }}-pvcreate"
+       vgcreate_guard: "/var/{{ guard_prefix }}-vgcreate"
+       lvcreate_guard: "/var/{{ guard_prefix }}-lvcreate"
+       mkfs_guard: "/var/{{ guard_prefix }}-mkfs"
+  tasks:
+      - apt: name=lvm2 state=present update_cache=true cache_valid_time=3600 install_recommends=true
+      - command: /sbin/pvcreate {{ device_name }} creates={{ pvcreate_guard }}
+      - file: path={{ pvcreate_guard }} state=touch
+      - command: /sbin/vgcreate {{ group_name }} {{ device_name }} creates={{ vgcreate_guard }}
+      - file: path={{ vgcreate_guard }} state=touch
+      - command: /sbin/lvcreate --name {{ volume_name }} --size {{ volume_size }} {{ group_name }} creates={{ lvcreate_guard }}
+      - file: path={{ lvcreate_guard }} state=touch
+      - command: /sbin/mkfs.ext4 /dev/{{ group_name }}/{{ volume_name }} creates={{ mkfs_guard }}
+      - file: path={{ mkfs_guard }} state=touch
+      - mount: name={{ mount_point }} src=/dev/{{ group_name }}/{{ volume_name }} fstype=ext4 opts=noatime state=mounted
+
+- name: Configure the MongoDB Partition
+  hosts: Ubuntu
+  become: True
+  vars:
+       device_name: "/dev/sdd"
+       group_name: "mongodb"
+       volume_name: "storage"
+       volume_size: "7G"
+       mount_point: "/var/lib/mongodb"
+       guard_prefix: "ansible-mongodb"
+       pvcreate_guard: "/var/{{ guard_prefix }}-pvcreate"
+       vgcreate_guard: "/var/{{ guard_prefix }}-vgcreate"
+       lvcreate_guard: "/var/{{ guard_prefix }}-lvcreate"
+       mkfs_guard: "/var/{{ guard_prefix }}-mkfs"
+  tasks:
+      - apt: name=xfsprogs state=present update_cache=true cache_valid_time=3600 install_recommends=true
+      - apt: name=lvm2 state=present update_cache=true cache_valid_time=3600 install_recommends=true
+      - command: /sbin/pvcreate {{ device_name }} creates={{ pvcreate_guard }}
+      - file: path={{ pvcreate_guard }} state=touch
+      - command: /sbin/vgcreate {{ group_name }} {{ device_name }} creates={{ vgcreate_guard }}
+      - file: path={{ vgcreate_guard }} state=touch
+      - command: /sbin/lvcreate --name {{ volume_name }} --size {{ volume_size }} {{ group_name }} creates={{ lvcreate_guard }}
+      - file: path={{ lvcreate_guard }} state=touch
+      - command: /sbin/mkfs.xfs /dev/{{ group_name }}/{{ volume_name }} creates={{ mkfs_guard }}
+      - file: path={{ mkfs_guard }} state=touch
+      - mount: name={{ mount_point }} src=/dev/{{ group_name }}/{{ volume_name }} fstype=xfs opts=noatime state=mounted
+
+- name: Install MySQL
+  hosts: Ubuntu
+  become: True
+  vars:
+       version: "5.6"
+  tasks:
+      - apt: name=mysql-server-{{ version }} state=present update_cache=true cache_valid_time=3600 install_recommends=true
+
+- name: Install RabbitMQ
+  hosts: Ubuntu
+  become: True
+  vars:
+       version: "1.2.3"
+  tasks:
+      # we need to figure out how to make RabbitMQ look for its configuration on a stable partition!
+      - template: src=templates/rabbitmq.config dest=/etc/rabbitmq.config mode=0444 backup=yes force=yes
+      - apt_key: url='https://www.rabbitmq.com/rabbitmq-release-signing-key.asc' state=present
+      - apt_repository: repo='deb http://www.rabbitmq.com/debian/ testing main' state=present update_cache=yes
+      - apt: name=rabbitmq-server state=present update_cache=true cache_valid_time=3600 install_recommends=true
+      - command: rabbitmq-plugins enable rabbitmq_management
+      - service: name=rabbitmq-server state=restarted
+      - command: rabbitmqctl status
+
+- name: Install MongoDB
+  hosts: Ubuntu
+  become: True
+  vars:
+       cacheSizeGB: 1
+       notablescan: 0
+       profilingMode: "off"
+       storageDirectory: "/var/lib/mongodb" 
+  tasks:
+    - copy: src=files/disable-transparent-hugepages dest=/etc/init.d/disable-transparent-hugepages mode=0755 backup=no force=yes
+    - command: /usr/sbin/update-rc.d disable-transparent-hugepages defaults
+    - template: src=templates/mongod.conf dest=/etc/mongod.conf mode=0444 backup=yes force=yes
+    - apt_key: state=present keyserver=keyserver.ubuntu.com id=EA312927
+    - apt_repository: repo='deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.2 multiverse' state=present
+    - apt: name=mongodb-org state=latest update_cache=true cache_valid_time=3600 install_recommends=true
