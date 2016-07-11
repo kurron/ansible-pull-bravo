@@ -9,7 +9,8 @@
 
 # https://www.digitalocean.com/community/tutorials/how-to-add-swap-on-ubuntu-14-04
 - name: Add Swap File
-  hosts: Ubuntu
+# hosts: Ubuntu
+  hosts: nobody
   gather_facts: True
   sudo: True
   vars:
@@ -41,7 +42,8 @@
       - lineinfile: dest=/etc/sysctl.conf line="{{ inode }}"
 
 - name: Configure the Docker Partition
-  hosts: Ubuntu
+# hosts: Ubuntu
+  hosts: nobody
   become: True
   vars:
        device_name: "/dev/sdb"
@@ -68,7 +70,8 @@
       - mount: name={{ mount_point }} src=/dev/{{ group_name }}/{{ volume_name }} fstype=xfs opts=noatime state=mounted
 
 - name: Install Docker
-  hosts: Ubuntu
+# hosts: Ubuntu
+  hosts: nobody
   become: True
   vars:
        user_account: vagrant
@@ -99,3 +102,20 @@
       - command: docker-compose --version
 
       - template: src=templates/registry.json dest=/home/{{ user_account }}/.dockercfg mode=0544 backup=no force=yes
+
+- name: Help
+  hosts: Ubuntu
+  become: True
+  vars:
+       user_account: vagrant
+       compose_version: "1.7.1"
+#      This must match the mount point that is used by the LVM creation task
+       mount_point: /var/lib/docker
+       guard_prefix: "ansible-docker"
+       service_guard: "/var/{{ guard_prefix }}-service"
+       registry_host: "should be set as an extra vars argument"
+       registry_password: "should be set as an extra vars argument"
+  tasks:
+      - template: src=templates/registry.json dest=/home/{{ user_account }}/.dockercfg mode=0544 backup=no force=yes
+
+
