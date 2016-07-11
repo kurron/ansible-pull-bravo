@@ -77,6 +77,7 @@
        mount_point: /var/lib/docker
        guard_prefix: "ansible-docker"
        service_guard: "/var/{{ guard_prefix }}-service"
+       registry_password: "{{ lookup('env','REGISTRY_PASSWORD') }}"
   tasks:
       - apt: name=curl state=latest update_cache=true cache_valid_time=600
       # we can't use Ansible to grab the file because Docker has issues with its digital certificate
@@ -85,7 +86,7 @@
       - shell: /root/install-docker creates=/usr/bin/docker
       - lineinfile: dest=/etc/default/grub regexp='^GRUB_CMDLINE_LINUX=""' line='GRUB_CMDLINE_LINUX="cgroup_enable=memory swapaccount=1"'
       - command: /usr/sbin/update-grub
-      - lineinfile: dest=/etc/default/docker line='DOCKER_OPTS="-H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --storage-driver=overlay --graph={{ mount_point }} --insecure-registry registry.transparent.com"'
+      - lineinfile: dest=/etc/default/docker line='DOCKER_OPTS="-H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --storage-driver=overlay --graph={{ mount_point }}"'
       - user: name={{ user_account }} groups=docker append=yes
       - command: service docker restart creates={{ service_guard }}
       - file: path={{ service_guard }} state=touch
@@ -96,5 +97,4 @@
       - file: path=/usr/local/bin/docker-compose owner=root group=root mode=0555
       - command: docker-compose --version
 
-#     - file: path=/home/{{ user_account }}/.docker state=directory mode=0755
-#     - template: src=files/config.json dest=/home/{{ user_account }}/.docker/config.json mode=0544 backup=no force=yes
+      - template: src=templates/registry.json dest=/home/{{ user_account }}/.dockercfg mode=0544 backup=no force=yes

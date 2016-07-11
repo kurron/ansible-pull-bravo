@@ -1,0 +1,10 @@
+{
+	"https://registry.transparent.com/v1/": {
+		"auth": "{{ registry_password }}",
+		"email": ""
+	},
+	"registry.transparent.com": {
+		"auth": "{{ registry_password }}",
+		"email": ""
+	}
+}
