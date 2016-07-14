@@ -131,6 +131,6 @@
        mold_e_event_processor_tag: 1.0.767.MILESTONE
   tasks:
       - docker_image:
-            repository: registry.transparent.com
-            name: mold-e-reporting-event-processor
-            tag: {{ mold_e_event_processor_tag }}
+            repository: "registry.transparent.com"
+            name: "mold-e-reporting-event-processor"
+            tag: "{{ mold_e_event_processor_tag }}"
