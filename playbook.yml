@@ -111,4 +111,13 @@
       - debug: msg="host={{ registry_host }}, password= {{ registry_password }}"
       - template: src=templates/registry.json dest=/home/{{ user_account }}/.dockercfg mode=0544 backup=no force=yes
 
-
+- name: Install Self-Signed Certificate
+  hosts: Ubuntu
+  become: True
+  tasks:
+      - file: path=/usr/local/share/ca-certificates/docker-registry state=directory
+      - file: path=/etc/ssl/certs/ state=directory
+      - get_url: >
+                url=http://192.168.254.81:81/artifactory/static/ease/docker-registry/certifcate/registry.transparent.CA.crt
+                dest=/usr/local/share/ca-certificates/docker-registry/registry.transparent.CA.crt
+      - shell: update-ca-certificates
