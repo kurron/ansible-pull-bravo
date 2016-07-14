@@ -121,6 +121,7 @@
                 url=http://192.168.254.81:81/artifactory/static/ease/docker-registry/certifcate/registry.transparent.CA.crt
                 dest=/usr/local/share/ca-certificates/docker-registry/registry.transparent.CA.crt
       - shell: update-ca-certificates
+      - command: service docker restart
 
 - name: Pull Down Docker Containers
   hosts: Ubuntu
