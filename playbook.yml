@@ -133,4 +133,4 @@
       - docker_image:
             name: "registry.transparent.com/mold-e-reporting-event-processor"
             tag: "{{ mold_e_event_processor_tag }}"
-            cacert_path: "/usr/local/share/ca-certificates/docker-registry/registry.transparent.CA.crt"
+            tls: True
