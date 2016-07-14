@@ -9,8 +9,7 @@
 
 # https://www.digitalocean.com/community/tutorials/how-to-add-swap-on-ubuntu-14-04
 - name: Add Swap File
-# hosts: Ubuntu
-  hosts: nobody
+  hosts: Ubuntu
   gather_facts: True
   become: True
   vars:
@@ -42,8 +41,7 @@
       - lineinfile: dest=/etc/sysctl.conf line="{{ inode }}"
 
 - name: Configure the Docker Partition
-# hosts: Ubuntu
-  hosts: nobody
+  hosts: Ubuntu
   become: True
   vars:
        device_name: "/dev/sdb"
@@ -70,8 +68,7 @@
       - mount: name={{ mount_point }} src=/dev/{{ group_name }}/{{ volume_name }} fstype=xfs opts=noatime state=mounted
 
 - name: Install Docker
-# hosts: Ubuntu
-  hosts: nobody
+  hosts: Ubuntu
   become: True
   vars:
        user_account: vagrant
@@ -103,13 +100,13 @@
 
       - template: src=templates/registry.json dest=/home/{{ user_account }}/.dockercfg mode=0544 backup=no force=yes
 
-- name: Help
+- name: Install Docker Credentials
   hosts: Ubuntu
   become: True
   vars:
        user_account: vagrant
-       registry_host: "HOOOOOOOOOOOOST"
-       registry_password: "PAAAAAAAAAAAAASWORD"
+       registry_host: "EXPECTED TO BE SOURCED VIA THE ENVIRONMENT"
+       registry_password: "EXPECTED TO BE SOURCED VIA THE ENVIRONMENT"
   tasks:
       - debug: msg="host={{ registry_host }}, password= {{ registry_password }}"
       - template: src=templates/registry.json dest=/home/{{ user_account }}/.dockercfg mode=0544 backup=no force=yes
