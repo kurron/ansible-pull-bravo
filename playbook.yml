@@ -13,31 +13,19 @@
   gather_facts: True
   become: True
   vars:
-       guard_name: "swapfile"
        swap_size: "4G"
        swap_path: "/swapfile"
        swappiness: "vm.swappiness=10"
        inode: "vm.vfs_cache_pressure=50"
-       guard_prefix: "ansible-swapfile"
-       fallocate_guard: "/var/{{ guard_prefix }}-fallocate"
-       mkswap_guard: "/var/{{ guard_prefix }}-mkswap"
-       swapon_guard: "/var/{{ guard_prefix }}-swapon"
-       swappiness_guard: "/var/{{ guard_prefix }}-swappiness"
-       inode_guard: "/var/{{ guard_prefix }}-inode"
   tasks:
-      - command: /usr/bin/fallocate --length {{ swap_size }} {{ swap_path }} creates={{ fallocate_guard }}
-      - file: path={{ fallocate_guard }} state=touch
+      - command: /usr/bin/fallocate --length {{ swap_size }} {{ swap_path }}
       - file: path={{ swap_path }} owner=root group=root mode=0600
-      - command: /sbin/mkswap {{ swap_path }} creates={{ mkswap_guard }}
-      - file: path={{ mkswap_guard }} state=touch
-      - command: /sbin/swapon {{ swap_path }} creates={{ swapon_guard }}
-      - file: path={{ swapon_guard }} state=touch
+      - command: /sbin/mkswap {{ swap_path }}
+      - command: /sbin/swapon {{ swap_path }}
       - lineinfile: dest=/etc/fstab line="{{ swap_path }}   none    swap    sw    0   0"
-      - command: /sbin/sysctl {{ swappiness }} creates={{ swappiness_guard }}
-      - file: path={{ swappiness_guard }} state=touch
+      - command: /sbin/sysctl {{ swappiness }}
       - lineinfile: dest=/etc/sysctl.conf line="{{ swappiness }}"
-      - command: /sbin/sysctl {{ inode }} creates={{ inode_guard }}
-      - file: path={{ inode_guard }} state=touch
+      - command: /sbin/sysctl {{ inode }}
       - lineinfile: dest=/etc/sysctl.conf line="{{ inode }}"
 
 - name: Configure the Docker Partition
@@ -49,22 +37,13 @@
        volume_name: "storage"
        volume_size: "7G"
        mount_point: "/var/lib/docker"
-       guard_prefix: "ansible-docker-partition"
-       pvcreate_guard: "/var/{{ guard_prefix }}-pvcreate"
-       vgcreate_guard: "/var/{{ guard_prefix }}-vgcreate"
-       lvcreate_guard: "/var/{{ guard_prefix }}-lvcreate"
-       mkfs_guard: "/var/{{ guard_prefix }}-mkfs"
   tasks:
       - apt: name=xfsprogs state=present update_cache=true cache_valid_time=3600 install_recommends=true
       - apt: name=lvm2 state=present update_cache=true cache_valid_time=3600 install_recommends=true
-      - command: /sbin/pvcreate {{ device_name }} creates={{ pvcreate_guard }}
-      - file: path={{ pvcreate_guard }} state=touch
-      - command: /sbin/vgcreate {{ group_name }} {{ device_name }} creates={{ vgcreate_guard }}
-      - file: path={{ vgcreate_guard }} state=touch
-      - command: /sbin/lvcreate --name {{ volume_name }} --size {{ volume_size }} {{ group_name }} creates={{ lvcreate_guard }}
-      - file: path={{ lvcreate_guard }} state=touch
-      - command: /sbin/mkfs.xfs /dev/{{ group_name }}/{{ volume_name }} creates={{ mkfs_guard }}
-      - file: path={{ mkfs_guard }} state=touch
+      - command: /sbin/pvcreate {{ device_name }}
+      - command: /sbin/vgcreate {{ group_name }} {{ device_name }}
+      - command: /sbin/lvcreate --name {{ volume_name }} --size {{ volume_size }} {{ group_name }}
+      - command: /sbin/mkfs.xfs /dev/{{ group_name }}/{{ volume_name }}
       - mount: name={{ mount_point }} src=/dev/{{ group_name }}/{{ volume_name }} fstype=xfs opts=noatime state=mounted
 
 - name: Install Docker
@@ -75,8 +54,6 @@
        compose_version: "1.7.1"
 #      This must match the mount point that is used by the LVM creation task
        mount_point: /var/lib/docker
-       guard_prefix: "ansible-docker"
-       service_guard: "/var/{{ guard_prefix }}-service"
        registry_host: "should be set as an extra vars argument"
        registry_password: "should be set as an extra vars argument"
   tasks:
@@ -89,15 +66,14 @@
       - command: /usr/sbin/update-grub
       - lineinfile: dest=/etc/default/docker line='DOCKER_OPTS="-H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --storage-driver=overlay --graph={{ mount_point }}"'
       - user: name={{ user_account }} groups=docker append=yes
-      - command: service docker restart creates={{ service_guard }}
-      - file: path={{ service_guard }} state=touch
+#     - command: service docker restart
+      - service: name=docker state=restarted
       - command: docker run hello-world
 
       # we can't use Ansible to grab the file because Docker has issues with its digital certificate
       - shell: /usr/bin/curl --location --output /usr/local/bin/docker-compose https://github.com/docker/compose/releases/download/{{ compose_version }}/docker-compose-`uname -s`-`uname -m` creates=/usr/local/bin/docker-compose
       - file: path=/usr/local/bin/docker-compose owner=root group=root mode=0555
       - command: docker-compose --version
-
       - template: src=templates/registry.json dest=/home/{{ user_account }}/.dockercfg mode=0544 backup=no force=yes
 
 - name: Install Docker Credentials
@@ -121,7 +97,8 @@
                 url=http://192.168.254.81:81/artifactory/static/ease/docker-registry/certifcate/registry.transparent.CA.crt
                 dest=/usr/local/share/ca-certificates/docker-registry/registry.transparent.CA.crt
       - shell: update-ca-certificates
-      - command: service docker restart
+#     - command: service docker restart
+      - service: name=docker state=restarted
 
 - name: Pull Down Docker Containers
   hosts: Ubuntu
