@@ -133,4 +133,4 @@
       - docker_image:
             name: "registry.transparent.com/mold-e-reporting-event-processor"
             tag: "{{ mold_e_event_processor_tag }}"
-            tls: True
+            use_tls: encrypt
