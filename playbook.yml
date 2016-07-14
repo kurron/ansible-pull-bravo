@@ -110,8 +110,6 @@
        core_services_tag: 1.0.769.MILESTONE
        tlo_tag: 1.11.21
        lds_tag: 1.0.898
-       varnish_tag: 1.0.898
-       nginx_tag: 1.0.898
        mli_tag: 14-master
        journaler_tag: 16-master
   tasks:
@@ -120,7 +118,7 @@
             tag: "{{ rest_services_tag }}"
             use_tls: encrypt
       - docker_image:
-            name: "registry.transparent.com/mold-e-core-services"
+            name: "registry.transparent.com/mold-e-reporting-event-processor"
             tag: "{{ core_services_tag }}"
             use_tls: encrypt
       - docker_image:
@@ -133,11 +131,11 @@
             use_tls: encrypt
       - docker_image:
             name: "registry.transparent.com/lds-varnish"
-            tag: "{{ varnish_tag }}"
+            tag: "{{ lds_tag }}"
             use_tls: encrypt
       - docker_image:
             name: "registry.transparent.com/lds-nginx"
-            tag: "{{ nginx_tag }}"
+            tag: "{{ lds_tag }}"
             use_tls: encrypt
       - docker_image:
             name: "registry.transparent.com/molde-mli-forever"
