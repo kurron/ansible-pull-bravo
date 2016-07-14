@@ -106,8 +106,8 @@
   tags:
   - images
   vars:
-       rest_services_tag: 1.0.942.MILESTONE
-       core_services_tag: 1.0.769.MILESTONE
+       rest_services_tag: 1.0.944.MILESTONE
+       core_services_tag: 1.0.768.MILESTONE
        tlo_tag: 1.11.21
        lds_tag: 1.0.898
        mli_tag: 14-master
