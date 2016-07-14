@@ -106,9 +106,44 @@
   tags:
   - images
   vars:
-       mold_e_event_processor_tag: 1.0.767.MILESTONE
+       rest_services_tag: 1.0.942.MILESTONE
+       core_services_tag: 1.0.769.MILESTONE
+       tlo_tag: 1.11.21
+       lds_tag: 1.0.898
+       varnish_tag: 1.0.898
+       nginx_tag: 1.0.898
+       mli_tag: 14-master
+       journaler_tag: 16-master
   tasks:
       - docker_image:
-            name: "registry.transparent.com/mold-e-reporting-event-processor"
-            tag: "{{ mold_e_event_processor_tag }}"
+            name: "registry.transparent.com/mold-e-rest-services"
+            tag: "{{ rest_services_tag }}"
+            use_tls: encrypt
+      - docker_image:
+            name: "registry.transparent.com/mold-e-core-services"
+            tag: "{{ core_services_tag }}"
+            use_tls: encrypt
+      - docker_image:
+            name: "registry.transparent.com/tlo"
+            tag: "{{ tlo_tag }}"
+            use_tls: encrypt
+      - docker_image:
+            name: "registry.transparent.com/lds"
+            tag: "{{ lds_tag }}"
+            use_tls: encrypt
+      - docker_image:
+            name: "registry.transparent.com/lds-varnish"
+            tag: "{{ varnish_tag }}"
+            use_tls: encrypt
+      - docker_image:
+            name: "registry.transparent.com/lds-nginx"
+            tag: "{{ nginx_tag }}"
+            use_tls: encrypt
+      - docker_image:
+            name: "registry.transparent.com/molde-mli-forever"
+            tag: "{{ mli_tag }}"
+            use_tls: encrypt
+      - docker_image:
+            name: "registry.transparent.com/molde-journal"
+            tag: "{{ journaler_tag }}"
             use_tls: encrypt
