@@ -121,3 +121,14 @@
                 url=http://192.168.254.81:81/artifactory/static/ease/docker-registry/certifcate/registry.transparent.CA.crt
                 dest=/usr/local/share/ca-certificates/docker-registry/registry.transparent.CA.crt
       - shell: update-ca-certificates
+
+- name: Pull Down Docker Containers
+  hosts: Ubuntu
+  become: True
+  vars:
+       mold_e_event_processor_tag: 1.0.767.MILESTONE
+  tasks:
+      - docker_image:
+            repository: registry.transparent.com
+            name: mold-e-reporting-event-processor
+            tag: {{ mold_e_event_processor_tag }}
