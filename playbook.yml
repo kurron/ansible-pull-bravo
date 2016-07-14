@@ -124,7 +124,9 @@
 
 - name: Pull Down Docker Containers
   hosts: Ubuntu
-  become: True
+  become: False
+  tags:
+  - images
   vars:
        mold_e_event_processor_tag: 1.0.767.MILESTONE
   tasks:
