@@ -103,8 +103,7 @@
       - service: name=docker state=restarted
 
 - name: Pull Down Docker Containers
-# hosts: Ubuntu
-  hosts: nobody
+  hosts: Ubuntu
   become: False
   tags:
   - images
